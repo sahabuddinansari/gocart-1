@@ -10,7 +10,7 @@ export async function POST(request) {
 
     const name = formData.get("name");
     const username = formData.get("username");
-    const description = formData.get("description");
+    const description = formData.get("description")
     const email = formData.get("email");
     const contact = formData.get("contact");
     const address = formData.get("address");
@@ -41,7 +41,7 @@ export async function POST(request) {
       data: {
         userId,
         name,
-        username: username.toLowerCase(),
+        username:username.toLowerCase(),
         description,
         email,
         contact,
