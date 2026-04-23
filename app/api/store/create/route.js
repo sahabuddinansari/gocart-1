@@ -1,59 +1,59 @@
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
- 
 
-// Create the store
+export async function POST(request) {
+  try {
+    const { userId } = getAuth(request);
 
-export async function POST(request){
-  try{
-     const {userId} =getAuth(request)
-     // get the request from the from
+    const formData = await request.formData();
 
-     const formData = await request.formData()
+    const name = formData.get("name");
+    const username = formData.get("username");
+    const description = formData.get("description");
+    const email = formData.get("email");
+    const contact = formData.get("contact");
+    const address = formData.get("address");
+    const image = formData.get("image");
 
-     const name = formData.get("name")
-     const username = formData.get("username")
-     const description = formData.get("escription")
-     const email = formData.get("email")
-     const contact = formData.get("contact")
-     const address = formData.get("address")
-     const image = formData.get("image")
+    if (!name || !username || !description || !email || !contact || !address || !image) {
+      return NextResponse.json({ error: "missing store info" }, { status: 400 });
+    }
 
+    const store = await prisma.store.findFirst({
+      where: { userId },
+    });
 
+    if (store) {
+      return NextResponse.json({ status: store.status });
+    }
 
+    const isUsernameTaken = await prisma.store.findFirst({
+      where: { username: username.toLowerCase() },
+    });
 
-     if(!name || !username || !description || !email || !contact || !address || !image)
-     { 
-      return NextResponse.json({error: "missing store info"},{status:400})
+    if (isUsernameTaken) {
+      return NextResponse.json({ error: "username already taken" }, { status: 400 });
+    }
 
-     }
+    // create store
+    const newStore = await prisma.store.create({
+      data: {
+        userId,
+        name,
+        username: username.toLowerCase(),
+        description,
+        email,
+        contact,
+        address,
+        image,
+      },
+    });
 
-     // check is user have already registerd is store
-     const store = await prisma.store.findFirst({
-      where: {userId:userId}
-     })
+    return NextResponse.json(newStore);
 
-     // if store is already register then send status fo  store
-
-     if(store){
-      return NextResponse.json({status: store.status})
-     }
-
-
-     // check is username is already taken
-     const isUsernameTaken = await prisma.store.findFirst({
-      where:{ username: username.toLowercase() }
-     })
-     
-     if(isUsernameTaken){
-      return NextResponse.json({error:"username alrady taken"},{status:
-        400})
-     }
-
-     
-    }catch (error) {
-
-     }
-     
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "something went wrong" }, { status: 500 });
   }
+}
